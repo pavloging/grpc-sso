@@ -1,0 +1,6 @@
+env: "local" # dev, prod
+storage_path: "./storage/sso.db" # Path to store files
+token_ttl: 1h # Token expiration time
+grpc:
+  port: 44044 # gRPC server port
+  timeout: 5s # gRPC call timeout
