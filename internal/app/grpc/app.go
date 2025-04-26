@@ -29,10 +29,12 @@ func New(log *slog.Logger, port int) *App {
 }
 
 // MustRun runs gRPC server and panics if any error occurs.
-func (app *App) MustRun() {
+func (app *App) MustRun() error {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
+
+	return nil
 }
 
 // Run starts gRPC server app.
@@ -47,10 +49,12 @@ func (app *App) Run() error {
 		return fmt.Errorf("%s: %w", fn, err)
 	}
 
-	log.Info("starting gRPC server", slog.String("address", l.Addr().String()))
+	log.Info("gRPC server started")
 
+	// Запускаем сервер в горутине
+	log.Info("gRPC server starting", slog.String("address", l.Addr().String()))
 	if err := app.gRPCServer.Serve(l); err != nil {
-		return fmt.Errorf("%s: %w", fn, err)
+		log.Error("gRPC server failed", slog.String("error", err.Error()))
 	}
 
 	return nil
