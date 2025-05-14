@@ -12,7 +12,7 @@ type Config struct {
 	Env         string        `yaml:"env" env-default:"local"` // Если параметр не указан, то по умолчанию используется "local"
 	StoragePath string        `yaml:"storage_path" env-required:"true"`
 	GRPC        GRPCConfig    `yaml:"grpc"`
-	TokenTTL    time.Duration `yaml:"token_ttl" env-default:"1h"`
+	TokenTTL    time.Duration `yaml:"token_ttl" env-required:"true"`
 }
 
 type GRPCConfig struct {
@@ -33,12 +33,14 @@ func MustLoad() *Config {
 		panic("CONFIG_PATH is not set")
 	}
 
+	// Проверяем, существует ли файл конфигурации
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		panic("config file does not exist: " + configPath)
 	}
 
 	var cfg Config
 
+	// Читаем конфигурацию из файла
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		panic("cannot read config " + err.Error())
 	}

@@ -1,4 +1,4 @@
-package grpcApp
+package grpcapp
 
 import (
 	"fmt"
@@ -16,10 +16,10 @@ type App struct {
 }
 
 // New creates new gRPC server app.
-func New(log *slog.Logger, port int) *App {
+func New(log *slog.Logger, authService authgrpc.Auth, port int) *App {
 	gRPCServer := grpc.NewServer()
 
-	authgrpc.Register(gRPCServer)
+	authgrpc.Register(gRPCServer, authService)
 
 	return &App{
 		log:        log,
@@ -29,8 +29,8 @@ func New(log *slog.Logger, port int) *App {
 }
 
 // MustRun runs gRPC server and panics if any error occurs.
-func (app *App) MustRun() error {
-	if err := app.Run(); err != nil {
+func (a *App) MustRun() error {
+	if err := a.Run(); err != nil {
 		panic(err)
 	}
 
@@ -38,22 +38,22 @@ func (app *App) MustRun() error {
 }
 
 // Run starts gRPC server app.
-func (app *App) Run() error {
+func (a *App) Run() error {
 	const fn = "grpcApp.Run"
 
-	log := app.log.With(slog.String("fn", fn), slog.Int("port", app.port))
+	log := a.log.With(slog.String("fn", fn), slog.Int("port", a.port))
 
 	// Обрабатываем tcp пакеты
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", app.port))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
 		return fmt.Errorf("%s: %w", fn, err)
 	}
 
-	log.Info("gRPC server started")
+	log.Info("gRPC server started", slog.String("address", l.Addr().String()))
 
-	// Запускаем сервер в горутине
 	log.Info("gRPC server starting", slog.String("address", l.Addr().String()))
-	if err := app.gRPCServer.Serve(l); err != nil {
+
+	if err := a.gRPCServer.Serve(l); err != nil {
 		log.Error("gRPC server failed", slog.String("error", err.Error()))
 	}
 
@@ -61,11 +61,11 @@ func (app *App) Run() error {
 }
 
 // Stop stops gRPC server app.
-func (app *App) Stop() {
+func (a *App) Stop() {
 	const fn = "grpcApp.Stop"
 
-	app.log.With(slog.String("fn", fn)).Info("stopping gRPC server", slog.Int("port", app.port))
+	a.log.With(slog.String("fn", fn)).Info("stopping gRPC server", slog.Int("port", a.port))
 
 	// Блокируем новые запросы и ждем завершения текущих => выключаем
-	app.gRPCServer.GracefulStop()
+	a.gRPCServer.GracefulStop()
 }

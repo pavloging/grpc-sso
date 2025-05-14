@@ -20,18 +20,13 @@ func main() {
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
-	log.Info("starting application")
+	log.Info("starting application", slog.String("env", cfg.Env), slog.Int("port", cfg.GRPC.Port))
 
 	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
 	go application.GRPCSrv.MustRun()
 
 	log.Info("application started", slog.Int("port", cfg.GRPC.Port))
 
-	// TODO: инициализировать приложение (app)
-
-	// TODO: запустить gRPC-сервер приложения
-
-	// TODO: написать Graceful shutdown для database
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
